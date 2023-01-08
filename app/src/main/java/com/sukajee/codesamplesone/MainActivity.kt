@@ -15,19 +15,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.rotationMatrix
 import com.sukajee.codesamplesone.ui.theme.CodeSamplesOneTheme
+import kotlinx.coroutines.launch
 import kotlin.math.exp
 
 class MainActivity : ComponentActivity() {
@@ -96,8 +95,15 @@ fun Greeting(name: String) {
 
 @Composable
 fun CardContent(name: String) {
+
+    val scope = rememberCoroutineScope()
+
     var expanded by rememberSaveable { //try using remember and scrolling and check expanded state
         mutableStateOf(false)
+    }
+
+    val rotationAngle by remember {
+        mutableStateOf(Animatable(initialValue = if(expanded) 180f else 0f))
     }
 
     Row(
@@ -135,19 +141,30 @@ fun CardContent(name: String) {
         IconButton(
             onClick = {
                 expanded = !expanded
+                scope.launch {
+                    rotationAngle.animateTo(
+                        targetValue = if(expanded) 180f else 0f,
+                        animationSpec = tween(
+                            durationMillis = 500,
+                            easing = LinearEasing
+                        )
+                    )
+                }
             }
         ) {
-            if(expanded) {
-                Icon(
-                    imageVector = Icons.Default.ExpandLess,
-                    contentDescription = "Show less"
-                )
-            } else {
-                Icon(
-                    imageVector = Icons.Default.ExpandMore,
-                    contentDescription = "Show more"
-                )
-            }
+            Icon(
+                imageVector = Icons.Default.ExpandMore,
+                contentDescription = if(expanded) "Show less" else "Show more",
+                modifier = Modifier.rotate(rotationAngle.value)
+            )
+//            if(expanded) {
+//
+//            } else {
+//                Icon(
+//                    imageVector = Icons.Default.ExpandMore,
+//                    contentDescription = "Show more"
+//                )
+//            }
         }
     }
 }
